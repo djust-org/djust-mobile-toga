@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "djust-mobile-toga"
+version = "0.1.0"
+description = "Embed djust as an on-device loopback server inside a Toga + Briefcase mobile app."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "djust contributors" }]
+requires-python = ">=3.11"
+keywords = ["djust", "django", "mobile", "ios", "android", "toga", "briefcase"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+# djust itself is NOT a hard dep — consumers install djust separately because
+# the mobile path needs platform-specific cross-compiled wheels not on PyPI,
+# and we don't want pip to try to resolve djust from an index it can't find.
+# These are the runtime closure for the loopback-server + Toga shell pattern.
+dependencies = [
+    "Django>=4.2.29,<6",
+    "channels>=4,<5",
+    "uvicorn>=0.30,<1",
+    "wsproto>=1.2,<2",  # pure-Python WebSocket protocol for uvicorn (uvicorn-core ships none)
+    "toga-core>=0.5",
+]
+
+[project.urls]
+"Source" = "local-only"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/djust_mobile_toga"]
