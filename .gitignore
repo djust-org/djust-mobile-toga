@@ -5,3 +5,9 @@ build/
 *.egg-info/
 .venv/
 .claude/
+
+
+# IDE / macOS noise
+.DS_Store
+.idea/
+uv.lock

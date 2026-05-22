@@ -1,6 +1,6 @@
 """djust-mobile-toga — embed djust as an on-device server in a Toga + Briefcase app.
 
-Three submodules, all independent — import only what you need:
+Four submodules, all independent — import only what you need:
 
 * ``djust_mobile_toga.shims`` — cross-platform compatibility shims (must run
   BEFORE importing uvicorn/Django). Safe no-ops on platforms that don't need
@@ -16,6 +16,13 @@ Three submodules, all independent — import only what you need:
   ``data_dir_env_var``, ``on_app_ready()``. The base class handles writable
   data dir selection, background-thread ``migrate`` + ``collectstatic``,
   uvicorn boot, WebView pointing at loopback, iOS/Android status-bar tinting.
+
+* ``djust_mobile_toga.notifications`` — cross-platform on-device local
+  notifications. ``is_available()`` / ``request_permission()`` /
+  ``schedule_local(title=..., body=..., delay_seconds=..., identifier=...)``
+  / ``cancel_local(identifier)``. Backed by ``UNUserNotificationCenter`` on
+  iOS and ``NotificationManagerCompat`` (via Chaquopy's ``java`` module) on
+  Android; logged no-op on desktop.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.1"
