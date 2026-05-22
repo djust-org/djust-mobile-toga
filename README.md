@@ -1,8 +1,8 @@
 # djust-mobile-toga
 
 Embed djust as an on-device loopback server inside a Toga + Briefcase mobile
-app — the pattern used by [max-companion](../djust-mobile-poc) for both iOS
-and Android.
+app. Extracted from a working reference app that runs the same Django +
+djust codebase on iOS Simulator and Android emulator with no remote backend.
 
 This package gives you three pieces:
 
@@ -14,8 +14,8 @@ This package gives you three pieces:
 
 ## Status
 
-Alpha. Driven by the needs of [max-companion](../djust-mobile-poc). API may
-churn until a second consumer surfaces.
+Alpha. Driven by the needs of a single reference consumer so far. Public
+API may churn until a second consumer surfaces.
 
 ## Quick start
 
@@ -64,25 +64,32 @@ This package handles the runtime glue. The consumer is responsible for:
 1. **Cross-compiling djust** for iOS (`aarch64-apple-ios`,
    `aarch64-apple-ios-sim`) and/or Android (`aarch64-linux-android`,
    `x86_64-linux-android`). djust itself doesn't currently publish
-   mobile wheels; see max-companion's `scratch/build_djust_ios.sh` and
-   `scratch/build_djust_android.sh` for the recipe (maturin for iOS,
-   cibuildwheel for Android).
+   mobile wheels; the reference recipe is `maturin` + a BeeWare
+   cross-platform venv for iOS, and `cibuildwheel --platform android`
+   for Android (which manages the NDK download itself).
 
 2. **Repackaging non-mobile native deps** — `msgpack` ships a pure-Python
    fallback that needs to be re-tagged with iOS/Android platform tags so
-   pip will install it under `--platform`. See max-companion's
-   `scratch/build_wheelhouse.py`.
+   pip will install it under `--platform`. A small script that walks an
+   installed package's `__init__.py`, strips compiled `.so` files, and
+   emits a `py3-none-ios_..._iphoneos.whl` / `…_android_21_arm64_v8a.whl`
+   is enough.
 
 3. **Briefcase scaffold patches** — at least on Android, the generated
    `pip-options.txt` needs an absolute path for `--find-links wheels` and
-   the theme `colorPrimaryDark` needs to match `status_bar_color_argb`.
-   See max-companion's `scratch/patch_android_scaffold.sh`.
+   the theme `colorPrimaryDark` in `res/values/colors.xml` needs to match
+   `status_bar_color_argb` (the activity theme paints the status bar
+   before any runtime `setStatusBarColor` call lands).
 
-4. **Settings module that respects `DJUST_MOBILE_DATA_DIR`** — your
+4. **POST_NOTIFICATIONS permission on Android 13+** if using
+   `djust_mobile_toga.notifications` — declare it in your Briefcase
+   `[tool.briefcase.app.<name>.android]` block as
+   `permission."android.permission.POST_NOTIFICATIONS" = "..."`. Without
+   it the system silently drops notifications.
+
+5. **Settings module that respects `DJUST_MOBILE_DATA_DIR`** — your
    Django `settings.py` reads this env var (set by `BaseDjustApp` at
    startup) to place SQLite + collected static files somewhere writable.
-
-The max-companion project is the reference consumer for all four.
 
 ## License
 

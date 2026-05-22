@@ -35,7 +35,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Source" = "local-only"
+"Source" = "https://github.com/djust-org/djust-mobile-toga"
+"Issues" = "https://github.com/djust-org/djust-mobile-toga/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/djust_mobile_toga"]
