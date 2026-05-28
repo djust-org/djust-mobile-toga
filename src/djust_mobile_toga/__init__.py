@@ -1,6 +1,6 @@
 """djust-mobile-toga — embed djust as an on-device server in a Toga + Briefcase app.
 
-Four submodules, all independent — import only what you need:
+Six submodules, all independent — import only what you need:
 
 * ``djust_mobile_toga.shims`` — cross-platform compatibility shims (must run
   BEFORE importing uvicorn/Django). Safe no-ops on platforms that don't need
@@ -23,6 +23,21 @@ Four submodules, all independent — import only what you need:
   / ``cancel_local(identifier)``. Backed by ``UNUserNotificationCenter`` on
   iOS and ``NotificationManagerCompat`` (via Chaquopy's ``java`` module) on
   Android; logged no-op on desktop.
+
+* ``djust_mobile_toga.bridge`` — register JavaScript-to-Python callbacks
+  on the WKWebView via ``WKScriptMessageHandler``. Generic mechanism the
+  PassKit / vCard / .ics integrations build on. iOS-only (Android equivalent
+  via ``addJavascriptInterface`` is future work).
+
+* ``djust_mobile_toga.passkit`` — ``enable_apple_wallet(app)`` wires the
+  pkpass install handler. Pair with the ``{% wallet_add_button url %}``
+  template tag (in ``djust_mobile_toga.templatetags.djust_mobile_toga``)
+  for the in-page button. Requires ``"djust_mobile_toga"`` in
+  ``INSTALLED_APPS`` to load the template tag library.
 """
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
+
+# Convenience for Django integration. Pointing INSTALLED_APPS at the package
+# (vs. the AppConfig) auto-discovers `apps.DjustMobileTogaConfig`.
+default_app_config = "djust_mobile_toga.apps.DjustMobileTogaConfig"

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "djust-mobile-toga"
-version = "0.2.1"
+version = "0.3.0"
 description = "Embed djust as an on-device loopback server inside a Toga + Briefcase mobile app."
 readme = "README.md"
 license = { text = "MIT" }
