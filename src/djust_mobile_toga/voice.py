@@ -122,6 +122,37 @@ def _make_recognizer():
     return _ios["SFSpeechRecognizer"].alloc().initWithLocale_(locale)
 
 
+def request_permission() -> None:
+    """Ask iOS for speech-recognition + microphone permission (the one-time OS
+    prompts). Call ONCE at app startup — without it, the prompt never fires and
+    ``start_dictation`` returns auth-denied on a fresh install. No-op off-iOS;
+    fail-soft (never raises). Requires ``NSSpeechRecognitionUsageDescription`` +
+    ``NSMicrophoneUsageDescription`` in the app's Info.plist (or iOS hard-crashes
+    at the request)."""
+    if not _STT_READY:
+        return
+    try:
+        # SFSpeechRecognizer.requestAuthorization(handler) — handler gets an
+        # SFSpeechRecognizerAuthorizationStatus (NSInteger). Retain the Block
+        # across the async callback (the GC-crash lifetime rule).
+        def _on_speech_auth(status):
+            LOG.info("speech recognition authorization status=%s", int(status))
+
+        speech_block = _ios["Block"](_on_speech_auth, None, _ios["ctypes"].c_long)
+        _keepalive.append(speech_block)
+        _ios["SFSpeechRecognizer"].requestAuthorization_(speech_block)
+
+        # AVAudioSession.requestRecordPermission(handler) — handler gets a BOOL.
+        def _on_mic_auth(granted):
+            LOG.info("microphone permission granted=%s", bool(granted))
+
+        mic_block = _ios["Block"](_on_mic_auth, None, _ios["ctypes"].c_bool)
+        _keepalive.append(mic_block)
+        _ios["AVAudioSession"].sharedInstance().requestRecordPermission_(mic_block)
+    except Exception:  # noqa: BLE001 — must never crash the app
+        LOG.exception("voice request_permission failed")
+
+
 def start_dictation(
     on_partial: Optional[Callable[[str], None]] = None,
     on_final: Optional[Callable[[str], None]] = None,
