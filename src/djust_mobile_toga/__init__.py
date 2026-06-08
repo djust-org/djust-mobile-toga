@@ -41,9 +41,18 @@ Six submodules, all independent — import only what you need:
   compiles in (Foundation Models is Swift-only, so rubicon can't reach it
   directly); fail-soft no-op (``ask`` -> ``None``) on desktop / Android /
   older iOS / when the shim is absent.
+
+* ``djust_mobile_toga.voice`` — on-device speech. ``stt_available()`` /
+  ``start_dictation(on_partial=, on_final=)`` / ``stop_dictation()`` and
+  ``tts_available()`` / ``speak(text)`` / ``stop_speaking()``. iOS speech
+  frameworks (``SFSpeechRecognizer``, ``AVSpeechSynthesizer``) are ObjC-API so
+  rubicon reaches them DIRECTLY — no Swift shim. On-device recognition
+  (``requiresOnDeviceRecognition``) keeps audio on the phone. Fail-soft no-op on
+  desktop / Android / older iOS. Needs ``NSMicrophoneUsageDescription`` +
+  ``NSSpeechRecognitionUsageDescription`` in the consuming app's Info.plist.
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 # Convenience for Django integration. Pointing INSTALLED_APPS at the package
 # (vs. the AppConfig) auto-discovers `apps.DjustMobileTogaConfig`.
