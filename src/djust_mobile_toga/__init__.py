@@ -52,7 +52,7 @@ Six submodules, all independent — import only what you need:
   ``NSSpeechRecognitionUsageDescription`` in the consuming app's Info.plist.
 """
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 # Convenience for Django integration. Pointing INSTALLED_APPS at the package
 # (vs. the AppConfig) auto-discovers `apps.DjustMobileTogaConfig`.
