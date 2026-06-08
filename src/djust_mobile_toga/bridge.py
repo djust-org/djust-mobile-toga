@@ -78,7 +78,15 @@ def register_script_handler(
     wkwebview = app.webview._impl.native
     user_content_controller = wkwebview.configuration.userContentController
 
-    class _ScriptMessageHandler(NSObject):
+    # auto_rename=True: the ObjC runtime registers each rubicon class by name at
+    # the `class` statement, and a duplicate name raises "class already exists".
+    # The FIRST register_script_handler call (e.g. "addToWallet") registers
+    # _ScriptMessageHandler fine; a SECOND call (e.g. "speak") re-runs this
+    # statement and collided — so the second handler never registered. auto_rename
+    # lets rubicon transparently suffix the runtime name (_ScriptMessageHandler_2,
+    # …) so any number of handlers can be registered. (We never look the class up
+    # by name — only instantiate it here — so the suffixed name is harmless.)
+    class _ScriptMessageHandler(NSObject, auto_rename=True):
         """``WKScriptMessageHandler`` Obj-C subclass — single method."""
 
         @objc_method

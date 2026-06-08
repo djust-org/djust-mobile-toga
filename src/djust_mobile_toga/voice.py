@@ -111,7 +111,9 @@ def stt_available() -> bool:
         if recognizer is None:
             return False
         # supportsOnDeviceRecognition (iOS 13+) — gate before forcing on-device.
-        return bool(recognizer.supportsOnDeviceRecognition())
+        # It's an ObjC @property (readonly BOOL), so rubicon exposes it as an
+        # attribute, NOT a method — do NOT call it ('bool' object is not callable).
+        return bool(recognizer.supportsOnDeviceRecognition)
     except Exception:  # noqa: BLE001 — must never crash the app
         LOG.exception("voice stt_available() check raised")
         return False
@@ -171,7 +173,7 @@ def start_dictation(
         stop_dictation()  # ensure single session
 
         recognizer = _make_recognizer()
-        if recognizer is None or not recognizer.supportsOnDeviceRecognition():
+        if recognizer is None or not recognizer.supportsOnDeviceRecognition:
             LOG.info("start_dictation: on-device recognition unsupported")
             return False
 
@@ -206,7 +208,8 @@ def start_dictation(
                     return
                 result = _ios["ObjCInstance"](result_ptr)
                 text = str(result.bestTranscription.formattedString)
-                if result.isFinal():
+                # isFinal is an ObjC @property (BOOL) — attribute, not a method.
+                if result.isFinal:
                     if on_final:
                         on_final(text)
                 elif on_partial:
