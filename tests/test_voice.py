@@ -51,6 +51,11 @@ def test_stop_speaking_is_safe_noop():
     voice.stop_speaking()
 
 
+def test_request_permission_is_safe_noop_off_ios():
+    # No backend → no-op, never raises.
+    voice.request_permission()
+
+
 def test_stt_available_handles_flaky_backend(monkeypatch):
     # Simulate "classes resolved but the on-device check raises" → degrade to
     # False, never propagate.
