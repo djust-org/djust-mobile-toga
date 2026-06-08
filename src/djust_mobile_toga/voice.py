@@ -53,6 +53,10 @@ _session: dict[str, Any] = {}
 _keepalive: list = []
 # The synthesizer is retained for the process lifetime once created.
 _synth: Any = None
+# Cache for the resolved best TTS voice. _UNSET (not None) means "not resolved
+# yet" — None is a valid resolved value (let the system pick the default).
+_UNSET = object()
+_best_voice_cache: Any = _UNSET
 
 if _IS_IOS:
     try:
@@ -286,7 +290,7 @@ def speak(text: str) -> bool:
         if _synth is None:
             _synth = _ios["AVSpeechSynthesizer"].alloc().init()
         utterance = _ios["AVSpeechUtterance"].alloc().initWithString_(text)
-        voice = _ios["AVSpeechSynthesisVoice"].voiceWithLanguage_(_LOCALE)
+        voice = _best_voice()
         if voice:
             utterance.voice = voice
         _synth.speakUtterance_(utterance)
@@ -294,6 +298,46 @@ def speak(text: str) -> bool:
     except Exception:  # noqa: BLE001 — must never crash the app
         LOG.exception("speak() failed")
         return False
+
+
+def _best_voice():
+    """The most natural available en voice. `voiceWithLanguage_` returns the
+    DEFAULT (compact) voice, which sounds robotic; instead enumerate all installed
+    voices and pick the highest quality (premium=3 > enhanced=2 > default=1) for
+    English (preferring en-US). NOTE: enhanced/premium voices only exist if the
+    user has downloaded them (Settings → Accessibility → Spoken Content → Voices);
+    if none are installed, this returns the default voice — same as before, no
+    worse. Apple's actual Siri voice is private and not selectable here. Cached
+    after first resolution. Never raises (returns None → system picks default)."""
+    global _best_voice_cache
+    if _best_voice_cache is not _UNSET:
+        return _best_voice_cache
+    try:
+        voices = _ios["AVSpeechSynthesisVoice"].speechVoices()
+        best, best_q = None, -1
+        for v in voices:
+            lang = str(v.language)  # NSString → str before .startswith
+            if not lang.startswith("en"):
+                continue
+            q = int(v.quality)  # @property: premium 3 > enhanced 2 > default 1
+            # Prefer en-US at equal quality; otherwise highest quality wins.
+            score = q * 10 + (1 if lang == _LOCALE else 0)
+            if score > best_q:
+                best, best_q = v, score
+        if best is not None:
+            LOG.info(
+                "TTS voice: %s (%s, quality=%s)",
+                str(best.name),
+                str(best.language),
+                int(best.quality),
+            )
+        _best_voice_cache = best or _ios["AVSpeechSynthesisVoice"].voiceWithLanguage_(
+            _LOCALE
+        )
+    except Exception:  # noqa: BLE001 — fall back to system default
+        LOG.exception("_best_voice() failed; using system default")
+        _best_voice_cache = None
+    return _best_voice_cache
 
 
 def stop_speaking() -> None:
