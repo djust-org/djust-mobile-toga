@@ -34,9 +34,16 @@ Six submodules, all independent — import only what you need:
   template tag (in ``djust_mobile_toga.templatetags.djust_mobile_toga``)
   for the in-page button. Requires ``"djust_mobile_toga"`` in
   ``INSTALLED_APPS`` to load the template tag library.
+
+* ``djust_mobile_toga.apple_intelligence`` — on-device Apple Intelligence
+  (Foundation Models) Q&A. ``is_available()`` / ``ask(prompt, context=...,
+  instructions=...)``. iOS 26+ via a Swift ``@objc`` shim the consuming app
+  compiles in (Foundation Models is Swift-only, so rubicon can't reach it
+  directly); fail-soft no-op (``ask`` -> ``None``) on desktop / Android /
+  older iOS / when the shim is absent.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 # Convenience for Django integration. Pointing INSTALLED_APPS at the package
 # (vs. the AppConfig) auto-discovers `apps.DjustMobileTogaConfig`.
