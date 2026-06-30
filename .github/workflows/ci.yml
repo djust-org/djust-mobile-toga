@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-type:
+    name: Lint + type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv
+      - run: uv pip install -e ".[dev]"
+      - name: ruff lint
+        run: uv run ruff check src tests
+      - name: ruff format check
+        run: uv run ruff format --check src tests
+      - name: mypy
+        run: uv run mypy
+
+  test:
+    name: Tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv --python ${{ matrix.python-version }}
+      # The iOS-only ObjC bridges (voice/passkit/apple_intelligence/notifications)
+      # guard their platform imports and fail-soft off-iOS, so the suite runs on
+      # plain Linux runners against the fail-soft guard paths.
+      - run: uv pip install -e ".[dev]"
+      - run: uv run pytest -q
+
+  build:
+    name: Build + metadata check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # hatch reads __version__; full history is harmless + safe
+      - uses: astral-sh/setup-uv@v5
+      - name: Build sdist + wheel
+        run: uv build
+      - name: Validate distribution metadata
+        run: uv run --with twine twine check dist/*
+      - name: Confirm py.typed ships in the wheel
+        run: |
+          python -m zipfile -l dist/*.whl | grep -q 'djust_mobile_toga/py.typed' \
+            && echo "py.typed present in wheel" \
+            || { echo "ERROR: py.typed missing from wheel"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

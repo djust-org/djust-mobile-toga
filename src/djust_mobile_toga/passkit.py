@@ -206,8 +206,7 @@ def _present_pass_from_url(_app, url_str: str | None) -> None:
         add_vc = PKAddPassesViewController.alloc().initWithPass_(pkpass)
         if not add_vc:
             print(
-                "[djust_mobile_toga.passkit] PKAddPassesViewController "
-                "init returned nil",
+                "[djust_mobile_toga.passkit] PKAddPassesViewController init returned nil",
                 flush=True,
             )
             return
@@ -221,12 +220,9 @@ def _present_pass_from_url(_app, url_str: str | None) -> None:
             root = root.presentedViewController
         root.presentViewController_animated_completion_(add_vc, True, None)
         print(
-            f"[djust_mobile_toga.passkit] presented Add-to-Wallet sheet "
-            f"for {url_str}",
+            f"[djust_mobile_toga.passkit] presented Add-to-Wallet sheet for {url_str}",
             flush=True,
         )
     except Exception:
-        print(
-            "[djust_mobile_toga.passkit] handler raised:", flush=True
-        )
+        print("[djust_mobile_toga.passkit] handler raised:", flush=True)
         traceback.print_exc()

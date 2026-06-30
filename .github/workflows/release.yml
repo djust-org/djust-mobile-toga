@@ -1,0 +1,46 @@
+name: Release
+
+# Publishes to PyPI on a version tag (vX.Y.Z). Uses PyPI Trusted Publishing
+# (OIDC) — no API token stored in the repo. ONE-TIME SETUP on PyPI (see
+# RELEASING.md): create the `djust-mobile-toga` project's trusted publisher
+# pointing at this repo + workflow `release.yml` + environment `pypi`.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - name: Verify the tag matches __version__
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER=$(uv run python -c "import djust_mobile_toga; print(djust_mobile_toga.__version__)" 2>/dev/null \
+                || python -c "import re,sys; s=open('src/djust_mobile_toga/__init__.py').read(); print(re.search(r'__version__\s*=\s*\"([^\"]+)\"', s).group(1))")
+          echo "tag=$TAG  __version__=$VER"
+          [ "$TAG" = "$VER" ] || { echo "ERROR: tag v$TAG != __version__ $VER — bump __init__ before tagging"; exit 1; }
+      - run: uv build
+      - run: uv run --with twine twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # OIDC token for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

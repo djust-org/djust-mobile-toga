@@ -21,7 +21,6 @@ from __future__ import annotations
 import asyncio
 import socket
 
-
 DEFAULT_HOST = "127.0.0.1"
 
 
