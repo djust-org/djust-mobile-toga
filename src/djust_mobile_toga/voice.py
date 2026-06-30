@@ -32,7 +32,8 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 LOG = logging.getLogger("djust_mobile_toga.voice")
 
@@ -160,8 +161,8 @@ def request_permission() -> None:
 
 
 def start_dictation(
-    on_partial: Optional[Callable[[str], None]] = None,
-    on_final: Optional[Callable[[str], None]] = None,
+    on_partial: Callable[[str], None] | None = None,
+    on_final: Callable[[str], None] | None = None,
 ) -> bool:
     """Begin on-device dictation. ``on_partial(text)`` fires repeatedly with the
     in-progress transcript; ``on_final(text)`` fires once with the settled
@@ -225,14 +226,10 @@ def start_dictation(
 
         engine.prepare()
         engine.startAndReturnError_(None)
-        task = recognizer.recognitionTaskWithRequest_resultHandler_(
-            request, result_block
-        )
+        task = recognizer.recognitionTaskWithRequest_resultHandler_(request, result_block)
 
         # Retain EVERYTHING for the session lifetime (the GC-crash gotcha).
-        _session.update(
-            recognizer=recognizer, request=request, task=task, engine=engine
-        )
+        _session.update(recognizer=recognizer, request=request, task=task, engine=engine)
         _keepalive.extend([tap_block, result_block, _result, _tap])
         LOG.info("dictation started (on-device)")
         return True
@@ -331,9 +328,7 @@ def _best_voice():
                 str(best.language),
                 int(best.quality),
             )
-        _best_voice_cache = best or _ios["AVSpeechSynthesisVoice"].voiceWithLanguage_(
-            _LOCALE
-        )
+        _best_voice_cache = best or _ios["AVSpeechSynthesisVoice"].voiceWithLanguage_(_LOCALE)
     except Exception:  # noqa: BLE001 — fall back to system default
         LOG.exception("_best_voice() failed; using system default")
         _best_voice_cache = None

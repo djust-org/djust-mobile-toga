@@ -48,6 +48,7 @@ Or for an even more explicit pattern::
 import mimetypes
 import sys
 import types
+from typing import Any
 
 # The static-file MIME types most djust apps serve over the loopback handler.
 # All are present in Python 3.11+'s built-in ``types_map``; they are re-asserted
@@ -112,7 +113,9 @@ def _install_multiprocessing_stub() -> None:
     existing = sys.modules.get("_multiprocessing")
     if existing is None:
         try:
-            import _multiprocessing as existing  # noqa: F401  -- real module
+            import _multiprocessing as _real_mp
+
+            existing = _real_mp
         except ModuleNotFoundError:
             existing = None
 
@@ -124,7 +127,10 @@ def _install_multiprocessing_stub() -> None:
         return
 
     # iOS path — install a fresh stub.
-    stub = types.ModuleType("_multiprocessing")
+    # Typed Any so the dynamic attribute assignments below (SemLock, sem_unlink,
+    # …) that other stdlib modules read at import time don't trip mypy's
+    # attr-defined on a bare ModuleType.
+    stub: Any = types.ModuleType("_multiprocessing")
 
     class _SemLock:  # pragma: no cover - never instantiated on iOS
         """Placeholder for ``_multiprocessing.SemLock`` (named-semaphore lock).
@@ -133,9 +139,7 @@ def _install_multiprocessing_stub() -> None:
         """
 
         def __init__(self, *args, **kwargs):
-            raise NotImplementedError(
-                "_multiprocessing.SemLock is unavailable on this platform"
-            )
+            raise NotImplementedError("_multiprocessing.SemLock is unavailable on this platform")
 
     _ensure_semlock_class_attrs(_SemLock)
 

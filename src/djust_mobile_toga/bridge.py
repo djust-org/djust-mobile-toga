@@ -30,7 +30,8 @@ from __future__ import annotations
 
 import sys
 import traceback
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 _IS_IOS = sys.platform == "ios"
 
@@ -40,9 +41,7 @@ _IS_IOS = sys.platform == "ios"
 _REGISTERED_HANDLERS: dict[int, dict[str, Any]] = {}
 
 
-def register_script_handler(
-    app, name: str, callback: Callable[[Any, str | None], None]
-) -> None:
+def register_script_handler(app, name: str, callback: Callable[[Any, str | None], None]) -> None:
     """Register a Python callback against a WKScriptMessageHandler name.
 
     ``callback(app, body)`` runs on the main thread whenever JavaScript
@@ -69,8 +68,7 @@ def register_script_handler(
         from rubicon.objc import NSObject, ObjCClass, objc_method  # noqa: F401
     except Exception:
         print(
-            f"[djust_mobile_toga.bridge] rubicon.objc not importable — "
-            f"skipping handler '{name}'",
+            f"[djust_mobile_toga.bridge] rubicon.objc not importable — skipping handler '{name}'",
             flush=True,
         )
         return
@@ -86,13 +84,13 @@ def register_script_handler(
     # lets rubicon transparently suffix the runtime name (_ScriptMessageHandler_2,
     # …) so any number of handlers can be registered. (We never look the class up
     # by name — only instantiate it here — so the suffixed name is harmless.)
-    class _ScriptMessageHandler(NSObject, auto_rename=True):
+    # auto_rename is a rubicon-objc metaclass kwarg; NSObject is Any off-iOS so
+    # mypy can't see it accepts the kwarg.
+    class _ScriptMessageHandler(NSObject, auto_rename=True):  # type: ignore[call-arg]
         """``WKScriptMessageHandler`` Obj-C subclass — single method."""
 
         @objc_method
-        def userContentController_didReceiveScriptMessage_(
-            self, _controller, message
-        ):
+        def userContentController_didReceiveScriptMessage_(self, _controller, message):
             try:
                 body = message.body
                 py_body = str(body) if body is not None else None

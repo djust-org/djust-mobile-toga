@@ -80,9 +80,7 @@ if _IS_IOS:
 
         _ios["UNUserNotificationCenter"] = ObjCClass("UNUserNotificationCenter")
         _ios["UNMutableNotificationContent"] = ObjCClass("UNMutableNotificationContent")
-        _ios["UNTimeIntervalNotificationTrigger"] = ObjCClass(
-            "UNTimeIntervalNotificationTrigger"
-        )
+        _ios["UNTimeIntervalNotificationTrigger"] = ObjCClass("UNTimeIntervalNotificationTrigger")
         _ios["UNNotificationRequest"] = ObjCClass("UNNotificationRequest")
         _ios["UNNotificationSound"] = ObjCClass("UNNotificationSound")
         _ios["Block"] = Block
@@ -102,13 +100,13 @@ def _ios_request_permission() -> None:
     # void (^)(BOOL granted, NSError *error)
     callback = _ios["Block"](_on_auth, None, _ios["ctypes"].c_bool, _ios["ObjCInstance"])
     _ios_keepalive.append(callback)
-    center.requestAuthorizationWithOptions(
-        _IOS_AUTH_BADGE_SOUND_ALERT, completionHandler=callback
-    )
+    center.requestAuthorizationWithOptions(_IOS_AUTH_BADGE_SOUND_ALERT, completionHandler=callback)
     LOG.info("requested iOS notification authorization")
 
 
-def _ios_schedule_local(*, title: str, body: str, delay_seconds: float, identifier: str | None) -> bool:
+def _ios_schedule_local(
+    *, title: str, body: str, delay_seconds: float, identifier: str | None
+) -> bool:
     center = _ios["UNUserNotificationCenter"].currentNotificationCenter()
     content = _ios["UNMutableNotificationContent"].alloc().init()
     content.title = title
@@ -163,8 +161,12 @@ if _IS_ANDROID:
         # returns the Application instance (a Context) for the app's lifetime.
         Python = jclass("com.chaquo.python.Python")
         _android["context"] = Python.getPlatform().getApplication()
-        _android["NotificationCompat$Builder"] = jclass("androidx.core.app.NotificationCompat$Builder")
-        _android["NotificationManagerCompat"] = jclass("androidx.core.app.NotificationManagerCompat")
+        _android["NotificationCompat$Builder"] = jclass(
+            "androidx.core.app.NotificationCompat$Builder"
+        )
+        _android["NotificationManagerCompat"] = jclass(
+            "androidx.core.app.NotificationManagerCompat"
+        )
         _android["NotificationChannel"] = jclass("android.app.NotificationChannel")
         _android["NotificationManager"] = jclass("android.app.NotificationManager")
         _android["Handler"] = jclass("android.os.Handler")
@@ -181,7 +183,9 @@ if _IS_ANDROID:
         # declaring a static_proxy in pyproject.toml.
         _Runnable = jclass("java.lang.Runnable")
 
-        class _CallableRunnable(dynamic_proxy(_Runnable)):
+        # chaquopy's dynamic_proxy(...) returns a runtime-built base class mypy
+        # can't model (Android-only path).
+        class _CallableRunnable(dynamic_proxy(_Runnable)):  # type: ignore[misc]
             def __init__(self, fn):
                 super().__init__()
                 self._fn = fn
@@ -243,7 +247,9 @@ def _android_request_permission() -> None:
     )
 
 
-def _android_schedule_local(*, title: str, body: str, delay_seconds: float, identifier: str | None) -> bool:
+def _android_schedule_local(
+    *, title: str, body: str, delay_seconds: float, identifier: str | None
+) -> bool:
     global _android_next_id
     _android_ensure_channel()
 
@@ -302,6 +308,7 @@ def _android_cancel_local(identifier: str) -> None:
 # ----------------------------------------------------------------------------
 # Public API — platform-dispatching wrappers
 # ----------------------------------------------------------------------------
+
 
 def is_available() -> bool:
     """True when running on a platform with a real notifications backend."""

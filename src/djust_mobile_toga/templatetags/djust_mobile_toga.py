@@ -33,6 +33,4 @@ def wallet_add_button(
     aria_label: str = "Add to Apple Wallet",
 ) -> str:
     """Vanilla-Django shim — calls ``render_wallet_button_html``."""
-    return mark_safe(
-        render_wallet_button_html(url, css_class=css_class, aria_label=aria_label)
-    )
+    return mark_safe(render_wallet_button_html(url, css_class=css_class, aria_label=aria_label))

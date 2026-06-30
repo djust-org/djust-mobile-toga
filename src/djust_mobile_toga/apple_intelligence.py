@@ -130,9 +130,7 @@ def _ios_ask(prompt: str, context: str, instructions: str) -> str | None:
             prompt, context=context, instructions=instructions, completion=handler
         )
         if not done.wait(timeout=_ASK_TIMEOUT_SECONDS):
-            LOG.info(
-                "Apple Intelligence ask() timed out after %ss", _ASK_TIMEOUT_SECONDS
-            )
+            LOG.info("Apple Intelligence ask() timed out after %ss", _ASK_TIMEOUT_SECONDS)
             return None
         return result["text"]
     finally:

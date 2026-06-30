@@ -23,10 +23,7 @@ def test_tts_unavailable_off_ios():
 
 def test_start_dictation_returns_false_off_ios():
     # No backend → False, and it must not raise even with real callbacks passed.
-    assert (
-        voice.start_dictation(on_partial=lambda t: None, on_final=lambda t: None)
-        is False
-    )
+    assert voice.start_dictation(on_partial=lambda t: None, on_final=lambda t: None) is False
 
 
 def test_start_dictation_no_callbacks_off_ios():

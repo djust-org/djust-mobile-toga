@@ -4,7 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "djust-mobile-toga"
-version = "0.3.0"
+# Version is single-sourced from src/djust_mobile_toga/__init__.py (__version__)
+# to prevent the manifest/module/tag drift that previously left this at a stale
+# 0.3.0 while __init__ + the git tags were at 0.5.x.
+dynamic = ["version"]
 description = "Embed djust as an on-device loopback server inside a Toga + Briefcase mobile app."
 readme = "README.md"
 license = { text = "MIT" }
@@ -34,9 +37,45 @@ dependencies = [
     "toga-core>=0.5",
 ]
 
+[project.optional-dependencies]
+# Dev/CI toolchain. rubicon-objc / toga backends are NOT here: the iOS-only
+# bridges (voice/passkit/apple_intelligence/notifications) guard their ObjC
+# imports and fail-soft off-iOS, so lint/type/test run on plain Linux runners.
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "django-stubs>=5",
+]
+
 [project.urls]
 "Source" = "https://github.com/djust-org/djust-mobile-toga"
 "Issues" = "https://github.com/djust-org/djust-mobile-toga/issues"
 
+[tool.hatch.version]
+path = "src/djust_mobile_toga/__init__.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/djust_mobile_toga"]
+# py.typed (PEP 561) ships so downstream type-checkers honor our hints.
+[tool.hatch.build.targets.sdist]
+include = ["src/djust_mobile_toga", "README.md", "LICENSE"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/djust_mobile_toga"]
+# The native bridges import platform packages (rubicon.objc, java/chaquopy,
+# toga backends) only present on-device; treat unresolved imports as Any so
+# type-checking runs on Linux CI without the iOS/Android toolchains.
+ignore_missing_imports = true
+# Pragmatic for a young library: check what's annotated, don't force-annotate
+# every internal helper yet. The public API is already typed.
+check_untyped_defs = true

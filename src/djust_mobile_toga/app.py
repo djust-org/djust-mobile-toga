@@ -51,7 +51,7 @@ import socket
 import sys
 import threading
 import time
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import toga
 from toga.style import Pack
@@ -116,8 +116,7 @@ class BaseDjustApp(toga.App):
     def startup(self) -> None:
         if not self.asgi_app_path or not self.django_settings_module:
             raise RuntimeError(
-                "BaseDjustApp subclasses must set asgi_app_path and "
-                "django_settings_module"
+                "BaseDjustApp subclasses must set asgi_app_path and django_settings_module"
             )
 
         # 1. Writable data directory. The app bundle is read-only on both
@@ -159,9 +158,12 @@ class BaseDjustApp(toga.App):
             except Exception:  # noqa: BLE001 - cosmetic; never block startup
                 LOG.exception("could not disable WKWebView content-inset adjustment")
 
-        self.main_window = toga.Window(title=self.formal_name)
-        self.main_window.content = self.webview
-        self.main_window.show()
+        window = toga.Window(title=self.formal_name)
+        window.content = self.webview
+        window.show()
+        # toga's stubs type App.main_window as MainWindow | str | None, but a
+        # plain Window is a valid main window; assign through a typed local.
+        self.main_window = window  # type: ignore[assignment]
 
         # 4. Status-bar tint (if configured). Same RGB on both platforms;
         #    different APIs to apply it.
@@ -217,9 +219,7 @@ class BaseDjustApp(toga.App):
 
     def _run_server(self) -> None:
         """Run uvicorn — loopback-bound, single-process, wsproto."""
-        LOG.info(
-            "starting uvicorn (in-process) on %s:%s", _HOST, self.port
-        )
+        LOG.info("starting uvicorn (in-process) on %s:%s", _HOST, self.port)
         serve.run_loopback_server(
             self.asgi_app_path,
             port=self.port,
@@ -274,8 +274,9 @@ class BaseDjustApp(toga.App):
             b = (argb & 0xFF) / 255.0
             ui_color = ObjCClass("UIColor")
             colour = ui_color.colorWithRed(r, green=g, blue=b, alpha=a)
-            self.main_window._impl.native.backgroundColor = colour
-            self.main_window._impl.container.native.backgroundColor = colour
+            window = cast("toga.Window", self.main_window)
+            window._impl.native.backgroundColor = colour
+            window._impl.container.native.backgroundColor = colour
         except Exception:  # noqa: BLE001 - cosmetic; never block startup
             LOG.exception("could not set iOS status-bar colour")
 
