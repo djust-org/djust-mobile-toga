@@ -15,5 +15,13 @@ from django.apps import AppConfig
 
 
 class DjustMobileTogaConfig(AppConfig):
+    """Django app config so the package's ``templatetags/`` are discovered.
+
+    An empty contract — no models, no signals. Its only job is to register
+    ``djust_mobile_toga`` as an installed app so Django's template engine can
+    find the ``{% wallet_add_button %}`` tag. ``default_auto_field`` is left
+    inherited (resolved from ``settings.DEFAULT_AUTO_FIELD``).
+    """
+
     name = "djust_mobile_toga"
     verbose_name = "djust mobile toga"
