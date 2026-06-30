@@ -15,7 +15,7 @@ authors = [{ name = "djust contributors" }]
 requires-python = ">=3.11"
 keywords = ["djust", "django", "mobile", "ios", "android", "toga", "briefcase"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Framework :: Django",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
 ]
 # djust itself is NOT a hard dep — consumers install djust separately because
 # the mobile path needs platform-specific cross-compiled wheels not on PyPI,
