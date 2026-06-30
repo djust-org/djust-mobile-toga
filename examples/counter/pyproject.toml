@@ -1,0 +1,58 @@
+# Briefcase configuration for the djust-mobile-toga counter demo.
+#
+# This is a complete, minimal Briefcase app. The one thing it can't pin for
+# you is `djust` itself: on desktop it installs from PyPI, but the iOS/Android
+# builds need a cross-compiled wheel that isn't on an index Briefcase can
+# reach. See README.md ("Building for mobile") for how to supply it.
+
+[tool.briefcase]
+project_name = "djust Counter Demo"
+bundle = "org.djust.examples"
+version = "0.1.0"
+url = "https://github.com/djust-org/djust-mobile-toga"
+author = "djust"
+author_email = "hello@djust.org"
+license.text = "MIT"
+
+[tool.briefcase.app.counter_demo]
+formal_name = "djust Counter"
+description = "A reactive counter — Django + djust running on-device in a Toga WebView."
+long_description = """A tiny end-to-end example of djust-mobile-toga: a single
+djust LiveView (the counter) served by an on-device loopback uvicorn server and
+displayed in a native WebView. Tapping +/- round-trips over a loopback
+WebSocket; all state lives in Python. No remote backend, no client JavaScript.
+"""
+sources = ["src/counter_demo"]
+test_sources = []
+
+requires = [
+    "toga>=0.4.0",
+    "djust-mobile-toga>=0.6.0",
+    # `djust` is intentionally NOT listed here — see README "Building for mobile".
+    # For `briefcase dev` / desktop, install it into your venv with `pip install djust`.
+]
+
+# ---- Desktop (for `briefcase dev` and local packaging) ---------------------
+[tool.briefcase.app.counter_demo.macOS]
+universal_build = true
+requires = ["toga-cocoa>=0.4.0", "std-nslog>=1.0.3"]
+
+[tool.briefcase.app.counter_demo.linux]
+requires = ["toga-gtk>=0.4.0"]
+
+[tool.briefcase.app.counter_demo.windows]
+requires = ["toga-winforms>=0.4.0"]
+
+# ---- Mobile ----------------------------------------------------------------
+[tool.briefcase.app.counter_demo.iOS]
+requires = [
+    "toga-iOS>=0.4.0",
+    "std-nslog>=1.0.3",
+    # Add the cross-compiled `djust` wheel here (see README).
+]
+
+[tool.briefcase.app.counter_demo.android]
+requires = [
+    "toga-android>=0.4.0",
+    # Add the cross-compiled `djust` wheel here (see README).
+]
