@@ -4,7 +4,7 @@ Embed djust as an on-device loopback server inside a Toga + Briefcase mobile
 app. Extracted from a working reference app that runs the same Django +
 djust codebase on iOS Simulator and Android emulator with no remote backend.
 
-This package gives you three pieces:
+The core three pieces:
 
 | Module                          | What it does                                                                                                  |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -12,10 +12,24 @@ This package gives you three pieces:
 | `djust_mobile_toga.serve`       | Loopback-bound uvicorn helper that bypasses `uvicorn.supervisors` (iOS Python lacks `_multiprocessing`).      |
 | `djust_mobile_toga.app`         | `BaseDjustApp(toga.App)` — handles writable data dir, background-thread Django prep, uvicorn boot, WebView.   |
 
+…plus optional, fail-soft native bridges — `bridge` (JS↔Python), `passkit`
+(Apple Wallet), `voice` (on-device STT/TTS), `apple_intelligence` (Foundation
+Models), `notifications`. See **[docs/native-bridges.md](docs/native-bridges.md)**.
+
 ## Status
 
-Alpha. Driven by the needs of a single reference consumer so far. Public
-API may churn until a second consumer surfaces.
+**Beta.** Typed (`py.typed`), CI-gated (ruff + mypy + pytest on py3.11–3.13),
+and tested — the core (`serve`/`shims`/`apps`/`templatetags`/`bridge`) is at
+~100% off-device coverage; the iOS/Android native bodies are hand-verified on a
+device (see [docs/platform-support.md](docs/platform-support.md)). The public
+API is stabilizing but may still evolve before a 1.0; pin a version.
+
+## Documentation
+
+- **[Getting started](docs/getting-started.md)** — the consuming-app shape, Django settings, building with Briefcase.
+- **[Native bridges](docs/native-bridges.md)** — speech / wallet / Apple Intelligence / notifications + their `Info.plist` keys and Swift shims.
+- **[Platform support](docs/platform-support.md)** — the capability matrix + the fail-soft contract.
+- **[Contributing](CONTRIBUTING.md)** · **[Releasing](RELEASING.md)**
 
 ## Quick start
 
