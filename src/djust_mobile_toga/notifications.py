@@ -191,6 +191,9 @@ if _IS_ANDROID:
                 self._fn = fn
 
             def run(self):  # pragma: no cover - runs on Android UI thread
+                """Invoke the wrapped Python callable on the Android UI thread;
+                log + swallow any exception so a failed notification never
+                crashes the looper."""
                 try:
                     self._fn()
                 except Exception:  # noqa: BLE001

@@ -91,6 +91,9 @@ def register_script_handler(app, name: str, callback: Callable[[Any, str | None]
 
         @objc_method
         def userContentController_didReceiveScriptMessage_(self, _controller, message):
+            """Coerce the JS-posted body to ``str`` and invoke ``callback`` on the
+            main thread; swallow + print any callback exception so it never
+            propagates back into the WebView."""
             try:
                 body = message.body
                 py_body = str(body) if body is not None else None
