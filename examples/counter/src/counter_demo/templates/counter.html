@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover lets the page draw under the iOS status bar / home
+       indicator; the safe-area padding below reclaims that space. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>djust Counter</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      background: #0b1f3a;
+      color: #f4f7fb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Respect the iOS notch / Android cutout. */
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .card { text-align: center; padding: 2rem; width: 100%; max-width: 22rem; }
+    .count { font-size: 5rem; font-weight: 700; margin: 0.5rem 0 1.5rem; font-variant-numeric: tabular-nums; }
+    .row { display: flex; gap: 0.75rem; justify-content: center; }
+    button {
+      font-size: 1.5rem; font-weight: 600; min-width: 3.5rem; min-height: 3.5rem;
+      border: none; border-radius: 0.9rem; cursor: pointer; color: #fff;
+      background: #1d4ed8; transition: transform 0.05s ease, background 0.15s ease;
+    }
+    button:active { transform: scale(0.94); }
+    button.secondary { background: #334155; }
+    .reset { margin-top: 1.25rem; font-size: 0.95rem; min-height: 2.75rem; padding: 0 1.5rem; background: transparent; border: 1px solid #475569; }
+    .hint { margin-top: 2rem; font-size: 0.8rem; opacity: 0.55; line-height: 1.5; }
+  </style>
+  <!-- djust's reactive client. Kept OUTSIDE dj-root: the mount morph
+       re-creates the dj-root subtree and would not execute a <script> nested
+       inside it. -->
+  <script src="/static/djust/client.js" defer></script>
+</head>
+<body>
+  <div dj-root dj-view="counter_demo.views.CounterView" class="card">
+    <p style="opacity:0.6;margin:0;text-transform:uppercase;letter-spacing:0.1em;font-size:0.8rem;">djust counter</p>
+    <div class="count">{{ count }}</div>
+    <div class="row">
+      <button class="secondary" dj-click="decrement" aria-label="Decrement">&minus;</button>
+      <button dj-click="increment" aria-label="Increment">&plus;</button>
+    </div>
+    <button class="reset" dj-click="reset">Reset</button>
+    <p class="hint">
+      State lives in Python (<code>CounterView.count</code>).<br>
+      Taps round-trip over a loopback WebSocket — no client JS.
+    </p>
+  </div>
+</body>
+</html>

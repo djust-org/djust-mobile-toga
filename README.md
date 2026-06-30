@@ -23,21 +23,24 @@ When the app launches, `BaseDjustApp` starts a single-worker `uvicorn` bound to
 pointed at that loopback URL:
 
 ```
-┌─────────────────────────── phone ───────────────────────────┐
-│  Toga app  (BaseDjustApp)                                    │
-│                                                              │
-│   ┌────────────┐   http://127.0.0.1:<port>    ┌───────────┐  │
-│   │  WebView   │ ────────────────────────────▶│  uvicorn  │  │
-│   │ (your UI)  │ ◀──────  HTML / WS frames ────│  loopback │  │
-│   └────────────┘                               └─────┬─────┘  │
-│         ▲                                            ▼        │
-│         │ WKScriptMessageHandler           ┌─────────────────┐│
-│         │ (optional JS ↔ Python bridges)   │  Django + djust ││
-│         ▼                                  │  ASGI · SQLite  ││
-│   wallet · voice · AI · notifications      │  in the sandbox ││
-│                                            └─────────────────┘│
-│                           No network. No remote backend.     │
-└──────────────────────────────────────────────────────────────┘
++-------------------------- phone ---------------------------+
+|                                                            |
+|  +------------+   http://127.0.0.1:<port>                  |
+|  |  WebView   | ----- HTTP / WebSocket ------+             |
+|  | (your UI)  | <---- HTML / WS frames ---+  |             |
+|  +-----+------+                           |  v             |
+|        | JS <-> Python bridges       +----+-----------+    |
+|        v                             | uvicorn        |    |
+|  wallet / voice / AI / notifs        | loopback,1 wkr |    |
+|                                      +-------+--------+    |
+|                                              v             |
+|                                      +----------------+    |
+|                                      | Django + djust |    |
+|                                      | ASGI / SQLite  |    |
+|                                      +----------------+    |
+|                                                            |
+|            No network.   No remote backend.                |
++------------------------------------------------------------+
 ```
 
 It handles the parts that make "run Django on a phone" hard: the stdlib gaps
