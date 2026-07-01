@@ -53,9 +53,21 @@ requires = [
     "std-nslog>=1.0.3",
     # Add the cross-compiled `djust` wheel here (see README).
 ]
-# Permission strings for the voice bridge (Info.plist):
-info."NSMicrophoneUsageDescription" = "Dictation is transcribed on-device for the voice demo."
-info."NSSpeechRecognitionUsageDescription" = "Speech is recognized on-device for the voice demo."
+
+[tool.briefcase.app.showcase.iOS.info]
+UIStatusBarStyle = "UIStatusBarStyleLightContent"
+UIViewControllerBasedStatusBarAppearance = false
+UISupportedInterfaceOrientations = ["UIInterfaceOrientationPortrait"]
+# The app's only connection is to its own loopback server (http://127.0.0.1:<port>),
+# so App Transport Security guards nothing here — and it MUST be disabled, or iOS
+# rejects the plain-http loopback load on a real device with NSURLErrorDomain -1022
+# (NSAllowsLocalNetworking doesn't cover 127.0.0.0/8; the Simulator doesn't enforce
+# ATS, so this only bites on device). Keep the inline table on ONE physical line.
+NSAppTransportSecurity = { NSAllowsArbitraryLoads = true, NSAllowsLocalNetworking = true }
+# Voice bridge — on-device dictation needs mic + speech-recognition permission
+# strings, or iOS crashes at the authorization request.
+NSMicrophoneUsageDescription = "Dictation is transcribed on-device for the voice demo."
+NSSpeechRecognitionUsageDescription = "Speech is recognized on-device for the voice demo."
 
 [tool.briefcase.app.showcase.android]
 requires = [
