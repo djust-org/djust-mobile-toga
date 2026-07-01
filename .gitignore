@@ -11,3 +11,4 @@ build/
 .DS_Store
 .idea/
 uv.lock
+.pipeline-state/

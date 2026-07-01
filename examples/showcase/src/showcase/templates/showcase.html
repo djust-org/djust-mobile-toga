@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>djust-mobile-toga showcase</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      background: #0b1f3a; color: #eef3fb; min-height: 100vh;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    header { padding: 1.25rem 1.25rem 0.5rem; }
+    header h1 { margin: 0; font-size: 1.15rem; }
+    header p { margin: 0.25rem 0 0; font-size: 0.8rem; opacity: 0.6; }
+    /* Tab bar */
+    .tabs { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.75rem 1rem; }
+    .tabs button {
+      flex: 0 0 auto; border: none; border-radius: 999px; padding: 0.5rem 0.9rem;
+      font-size: 0.85rem; font-weight: 600; color: #cdd8ea; background: #1b2f52; cursor: pointer;
+    }
+    .tabs button.active { background: #2563eb; color: #fff; }
+    /* Panels */
+    .panel { padding: 0.5rem 1.25rem 2rem; }
+    .panel h2 { font-size: 1.05rem; margin: 0.25rem 0 0.15rem; }
+    .panel .api { font-size: 0.72rem; opacity: 0.55; font-family: ui-monospace, monospace; margin-bottom: 0.9rem; }
+    button.action {
+      font-size: 0.95rem; font-weight: 600; color: #fff; background: #2563eb;
+      border: none; border-radius: 0.7rem; padding: 0.7rem 1.1rem; margin: 0.25rem 0.4rem 0.25rem 0; cursor: pointer;
+    }
+    button.action.secondary { background: #334155; }
+    .status { margin-top: 0.9rem; font-size: 0.9rem; min-height: 1.2rem; }
+    .badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; margin-left: 0.4rem; vertical-align: middle; }
+    .badge.on { background: #14532d; color: #bbf7d0; }
+    .badge.off { background: #3f1d1d; color: #fecaca; }
+    input[type=text] {
+      width: 100%; padding: 0.7rem; border-radius: 0.6rem; border: 1px solid #33507e;
+      background: #0e2646; color: #eef3fb; font-size: 0.95rem;
+    }
+    .out { margin-top: 0.9rem; padding: 0.8rem; background: #0e2646; border-radius: 0.6rem; font-size: 0.9rem; min-height: 1.2rem; white-space: pre-wrap; }
+    .note { margin-top: 1rem; font-size: 0.78rem; opacity: 0.6; line-height: 1.5; }
+    /* Wallet button (from render_wallet_button_html) — minimal styling */
+    .wallet-add-button { display: inline-flex; align-items: center; gap: 0.5rem; background: #000; color: #fff;
+      text-decoration: none; padding: 0.6rem 1rem; border-radius: 0.6rem; font-weight: 600; }
+    .wallet-add-button svg { height: 1.4rem; width: auto; }
+    .wallet-add-button__small { display: block; font-size: 0.6rem; opacity: 0.8; }
+    .wallet-add-button__big { display: block; font-size: 0.95rem; }
+  </style>
+  <!-- djust reactive client — OUTSIDE dj-root (a <script> inside the reactive
+       root is not executed after the mount morph). -->
+  <script src="/static/djust/client.js" defer></script>
+</head>
+<body>
+  <div dj-root dj-view="showcase.views.ShowcaseView">
+    <header>
+      <h1>djust-mobile-toga</h1>
+      <p>One tab per native bridge. Each degrades gracefully off iOS.</p>
+    </header>
+
+    <nav class="tabs">
+      <button dj-click="show_tab('voice')" class="{% if tab == 'voice' %}active{% endif %}">Voice</button>
+      <button dj-click="show_tab('ai')" class="{% if tab == 'ai' %}active{% endif %}">AI</button>
+      <button dj-click="show_tab('wallet')" class="{% if tab == 'wallet' %}active{% endif %}">Wallet</button>
+      <button dj-click="show_tab('notifications')" class="{% if tab == 'notifications' %}active{% endif %}">Notify</button>
+      <button dj-click="show_tab('bridge')" class="{% if tab == 'bridge' %}active{% endif %}">JS Bridge</button>
+    </nav>
+
+    <!-- Voice ------------------------------------------------------------ -->
+    <section class="panel" style="display:{{ d_voice }}">
+      <h2>On-device speech
+        <span class="badge {% if voice_tts %}on{% else %}off{% endif %}">TTS {% if voice_tts %}ready{% else %}off{% endif %}</span>
+        <span class="badge {% if voice_stt %}on{% else %}off{% endif %}">STT {% if voice_stt %}ready{% else %}off{% endif %}</span>
+      </h2>
+      <div class="api">djust_mobile_toga.voice — SFSpeechRecognizer + AVSpeechSynthesizer</div>
+      <button class="action" dj-click="speak_sample">Speak a sample</button>
+      <button class="action" dj-click="start_dictation">Start dictation</button>
+      <button class="action secondary" dj-click="stop_dictation">Stop</button>
+      <div class="status">{{ voice_status }}</div>
+      <div class="out">{{ transcript }}</div>
+      <p class="note">STT audio never leaves the device. On desktop these are logged no-ops.</p>
+    </section>
+
+    <!-- Apple Intelligence ---------------------------------------------- -->
+    <section class="panel" style="display:{{ d_ai }}">
+      <h2>Apple Intelligence
+        <span class="badge {% if ai_available %}on{% else %}off{% endif %}">{% if ai_available %}available{% else %}unavailable{% endif %}</span>
+      </h2>
+      <div class="api">djust_mobile_toga.apple_intelligence.ask() — on-device Foundation Models</div>
+      <input type="text" aria-label="Ask the on-device model" dj-keydown.enter="ask_ai" placeholder="Ask something, then press Enter…">
+      <div class="status">{% if ai_thinking %}Thinking on-device…{% endif %}</div>
+      <div class="out">{{ ai_answer }}</div>
+      <p class="note">Runs entirely on device (iOS 26+ with the Swift shim). Returns a fallback message elsewhere.</p>
+    </section>
+
+    <!-- Apple Wallet ----------------------------------------------------- -->
+    <section class="panel" style="display:{{ d_wallet }}">
+      <h2>Apple Wallet</h2>
+      <div class="api">djust_mobile_toga.passkit.render_wallet_button_html() + enable_apple_wallet(app)</div>
+      {{ wallet_button|safe }}
+      <p class="note">The button HTML renders anywhere; tapping it presents the system
+        Add-to-Wallet sheet on iOS for the <code>.pkpass</code> at its URL. Supply your
+        own signed pass at <code>/passes/demo.pkpass</code>.</p>
+    </section>
+
+    <!-- Notifications ---------------------------------------------------- -->
+    <section class="panel" style="display:{{ d_notifications }}">
+      <h2>Local notifications
+        <span class="badge {% if notif_available %}on{% else %}off{% endif %}">{% if notif_available %}available{% else %}unavailable{% endif %}</span>
+      </h2>
+      <div class="api">djust_mobile_toga.notifications.schedule_local() / cancel_local() — iOS + Android</div>
+      <button class="action" dj-click="schedule_reminder">Schedule in 5s</button>
+      <button class="action secondary" dj-click="cancel_reminder">Cancel</button>
+      <div class="status">{{ notif_status }}</div>
+      <p class="note">The only cross-platform bridge — works on Android too. Logged no-op on desktop.</p>
+    </section>
+
+    <!-- JS ↔ Python bridge ---------------------------------------------- -->
+    <section class="panel" style="display:{{ d_bridge }}">
+      <h2>JavaScript &#8596; Python bridge</h2>
+      <div class="api">djust_mobile_toga.bridge.register_script_handler(app, "bridgeDemo", …) — iOS only</div>
+      <button class="action" onclick="djustBridgePing()">Call Python from in-page JS</button>
+      <div class="out" id="bridge-output">Tap the button — in-page JavaScript posts to Python, Python answers back into this box.</div>
+      <p class="note">Uses <code>window.webkit.messageHandlers</code>; Python replies via
+        <code>webview.evaluate_javascript</code>. iOS-only (Android <code>addJavascriptInterface</code> is future work).</p>
+    </section>
+  </div>
+
+  <!-- Page JS lives OUTSIDE dj-root so it actually executes. The button above
+       (inside dj-root) calls this function by name. -->
+  <script>
+    function djustBridgePing() {
+      var out = document.getElementById('bridge-output');
+      var mh = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.bridgeDemo;
+      if (mh) {
+        mh.postMessage('ping @ ' + new Date().toLocaleTimeString());
+        out.textContent = 'sent to Python…';
+      } else {
+        out.textContent = 'JS↔Python bridge is iOS-only — no WKWebView message handler here.';
+      }
+    }
+  </script>
+</body>
+</html>
