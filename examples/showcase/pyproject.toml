@@ -1,0 +1,76 @@
+# Briefcase configuration for the djust-mobile-toga showcase.
+#
+# One thing this can't pin for you: `djust` itself. On desktop it installs from
+# PyPI; the iOS/Android builds need a cross-compiled wheel that isn't on an
+# index Briefcase can reach. See README.md ("Building for mobile").
+#
+# Apple Intelligence additionally needs a small Swift @objc shim compiled into
+# the iOS binary — see docs/native-bridges.md. Without it, the AI tab shows its
+# fallback message; every other tab works with the stock scaffold.
+
+[tool.briefcase]
+project_name = "djust Showcase"
+bundle = "org.djust.examples"
+version = "0.1.0"
+url = "https://github.com/djust-org/djust-mobile-toga"
+author = "djust"
+author_email = "hello@djust.org"
+license.text = "MIT"
+
+[tool.briefcase.app.showcase]
+formal_name = "djust Showcase"
+description = "One screen per djust-mobile-toga native bridge: voice, AI, wallet, notifications, JS bridge."
+long_description = """A tour of every djust-mobile-toga native bridge, one tab
+each: on-device speech (SFSpeechRecognizer / AVSpeechSynthesizer), Apple
+Intelligence (on-device Foundation Models), Apple Wallet, local notifications,
+and the JavaScript<->Python bridge. All bridges are fail-soft, so the app runs
+and degrades gracefully on desktop; the native behaviour fires on iOS.
+"""
+sources = ["src/showcase"]
+test_sources = []
+
+requires = [
+    "toga>=0.4.0",
+    "djust-mobile-toga>=0.6.0",
+    # `djust` intentionally omitted — see README "Building for mobile".
+]
+
+# ---- Desktop (for `briefcase dev` and local packaging) ---------------------
+[tool.briefcase.app.showcase.macOS]
+universal_build = true
+requires = ["toga-cocoa>=0.4.0", "std-nslog>=1.0.3"]
+
+[tool.briefcase.app.showcase.linux]
+requires = ["toga-gtk>=0.4.0"]
+
+[tool.briefcase.app.showcase.windows]
+requires = ["toga-winforms>=0.4.0"]
+
+# ---- Mobile ----------------------------------------------------------------
+[tool.briefcase.app.showcase.iOS]
+requires = [
+    "toga-iOS>=0.4.0",
+    "std-nslog>=1.0.3",
+    # Add the cross-compiled `djust` wheel here (see README).
+]
+
+[tool.briefcase.app.showcase.iOS.info]
+UIStatusBarStyle = "UIStatusBarStyleLightContent"
+UIViewControllerBasedStatusBarAppearance = false
+UISupportedInterfaceOrientations = ["UIInterfaceOrientationPortrait"]
+# The app's only connection is to its own loopback server (http://127.0.0.1:<port>),
+# so App Transport Security guards nothing here — and it MUST be disabled, or iOS
+# rejects the plain-http loopback load on a real device with NSURLErrorDomain -1022
+# (NSAllowsLocalNetworking doesn't cover 127.0.0.0/8; the Simulator doesn't enforce
+# ATS, so this only bites on device). Keep the inline table on ONE physical line.
+NSAppTransportSecurity = { NSAllowsArbitraryLoads = true, NSAllowsLocalNetworking = true }
+# Voice bridge — on-device dictation needs mic + speech-recognition permission
+# strings, or iOS crashes at the authorization request.
+NSMicrophoneUsageDescription = "Dictation is transcribed on-device for the voice demo."
+NSSpeechRecognitionUsageDescription = "Speech is recognized on-device for the voice demo."
+
+[tool.briefcase.app.showcase.android]
+requires = [
+    "toga-android>=0.4.0",
+    # Add the cross-compiled `djust` wheel here (see README).
+]

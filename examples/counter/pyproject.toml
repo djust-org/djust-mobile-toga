@@ -51,6 +51,16 @@ requires = [
     # Add the cross-compiled `djust` wheel here (see README).
 ]
 
+[tool.briefcase.app.counter_demo.iOS.info]
+UIStatusBarStyle = "UIStatusBarStyleLightContent"
+UIViewControllerBasedStatusBarAppearance = false
+UISupportedInterfaceOrientations = ["UIInterfaceOrientationPortrait"]
+# The app's only connection is to its own loopback server (http://127.0.0.1:<port>),
+# so ATS guards nothing here — and it MUST be disabled, or iOS rejects the plain-http
+# loopback load on a real device with NSURLErrorDomain -1022 (the Simulator doesn't
+# enforce ATS, so this only bites on device). Keep the inline table on ONE line.
+NSAppTransportSecurity = { NSAllowsArbitraryLoads = true, NSAllowsLocalNetworking = true }
+
 [tool.briefcase.app.counter_demo.android]
 requires = [
     "toga-android>=0.4.0",
